@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gate-postgres
+    environment:
+      POSTGRES_DB: gate_db
+      POSTGRES_USER: gate_user
+      POSTGRES_PASSWORD: gate_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gate_user -d gate_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gate-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gate-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gate-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  gate-network:
+    driver: bridge

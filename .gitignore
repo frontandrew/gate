@@ -1,0 +1,95 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+coverage.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+*.tar
+*.tar.gz
+*.zip
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker volumes (if using local compose)
+postgres_data/
+redis_data/
+
+# Node modules (for frontend)
+node_modules/
+gate-frontend/node_modules/
+gate-frontend/dist/
+gate-frontend/.nuxt/
+gate-frontend/.output/
+
+# Python (for ML service)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+gate-ml/venv/
+gate-ml/.venv/
+gate-ml/__pycache__/
+gate-ml/*.pyc
+
+# ML models (can be large)
+*.pth
+*.pt
+*.h5
+*.pkl
+*.joblib
+gate-ml/models/*.pth
+
+# Uploads
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
