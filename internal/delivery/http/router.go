@@ -71,6 +71,7 @@ func (rt *Router) Setup() http.Handler {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", rt.authHandler.Register)
 			r.Post("/login", rt.authHandler.Login)
+			r.Post("/refresh", rt.authHandler.RefreshToken)
 		})
 
 		// Access check endpoint (публичный - используется камерами/шлагбаумами)

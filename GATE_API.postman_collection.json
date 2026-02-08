@@ -103,6 +103,45 @@
 					}
 				},
 				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.access_token);",
+									"    pm.environment.set('refresh_token', response.data.refresh_token);",
+									"    pm.environment.set('current_user_id', response.data.user.id);",
+									"    console.log('Tokens refreshed successfully');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Refresh access token using refresh token. Returns new access_token and refresh_token pair."
+					}
+				},
+				{
 					"name": "Get Current User (Me)",
 					"request": {
 						"auth": {

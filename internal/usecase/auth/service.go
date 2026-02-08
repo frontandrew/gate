@@ -201,3 +201,62 @@ func (s *Service) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, 
 func (s *Service) ValidateToken(tokenString string) (*jwt.Claims, error) {
 	return s.tokenService.ValidateToken(tokenString)
 }
+
+// RefreshTokenRequest - запрос на обновление токена
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// RefreshToken обновляет access token используя refresh token
+func (s *Service) RefreshToken(ctx context.Context, req *RefreshTokenRequest) (*LoginResponse, error) {
+	s.logger.Info("Token refresh attempt")
+
+	// Извлекаем claims из refresh token
+	claims, err := s.tokenService.ExtractClaims(req.RefreshToken)
+	if err != nil {
+		s.logger.Warn("Failed to extract claims from refresh token", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, domain.ErrInvalidToken
+	}
+
+	// Получаем актуальные данные пользователя
+	user, err := s.userRepo.GetByID(ctx, claims.UserID)
+	if err != nil {
+		if err == domain.ErrUserNotFound {
+			return nil, domain.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	// Проверяем, активен ли пользователь
+	if !user.IsActive {
+		s.logger.Warn("Token refresh failed: user inactive", map[string]interface{}{
+			"user_id": user.ID,
+		})
+		return nil, domain.ErrUserInactive
+	}
+
+	// Генерируем новую пару токенов
+	tokenPair, err := s.tokenService.GenerateTokenPair(user)
+	if err != nil {
+		s.logger.Error("Failed to generate new tokens", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	s.logger.Info("Token refreshed successfully", map[string]interface{}{
+		"user_id": user.ID,
+	})
+
+	// Не возвращаем password_hash
+	user.PasswordHash = ""
+
+	return &LoginResponse{
+		User:         user,
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		ExpiresAt:    tokenPair.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}

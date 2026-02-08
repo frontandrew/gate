@@ -112,3 +112,39 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"data":    user,
 	})
 }
+
+// RefreshToken обновляет access token используя refresh token
+// POST /api/v1/auth/refresh
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req auth.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	response, err := h.authService.RefreshToken(r.Context(), &req)
+	if err != nil {
+		if err == domain.ErrInvalidToken {
+			respondError(w, http.StatusUnauthorized, "Invalid refresh token")
+			return
+		}
+		if err == domain.ErrUserNotFound {
+			respondError(w, http.StatusUnauthorized, "User not found")
+			return
+		}
+		if err == domain.ErrUserInactive {
+			respondError(w, http.StatusForbidden, "User account is inactive")
+			return
+		}
+		h.logger.Error("Failed to refresh token", map[string]interface{}{
+			"error": err.Error(),
+		})
+		respondError(w, http.StatusInternalServerError, "Failed to refresh token")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    response,
+	})
+}
