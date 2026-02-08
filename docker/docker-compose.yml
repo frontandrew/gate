@@ -1,6 +1,34 @@
-version: '3.9'
-
 services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: gate-api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: gate-postgres
+      DB_PORT: "5432"
+      DB_USER: gate_user
+      DB_PASSWORD: gate_password
+      DB_NAME: gate_db
+      DB_SSLMODE: disable
+      REDIS_HOST: gate-redis
+      REDIS_PORT: "6379"
+      ML_SERVICE_URL: http://gate-ml:8001
+      JWT_SECRET: dev-secret-key-change-in-production
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8080"
+      LOG_LEVEL: debug
+      LOG_FORMAT: console
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gate-network
+
   postgres:
     image: postgres:16-alpine
     container_name: gate-postgres
@@ -12,7 +40,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gate_user -d gate_db"]
       interval: 10s
@@ -42,4 +69,5 @@ volumes:
 
 networks:
   gate-network:
+    name: gate-network
     driver: bridge

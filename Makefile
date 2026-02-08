@@ -19,12 +19,14 @@ install: ## Install Go dependencies
 
 migrate-up: ## Run database migrations up
 	@echo "Running migrations..."
-	@migrate -path migrations -database "$(DB_URL)" up
+	@docker run --rm -v $(CURDIR)/migrations:/migrations --network gate-network migrate/migrate \
+		-path=/migrations -database "postgresql://gate_user:gate_password@gate-postgres:5432/gate_db?sslmode=disable" up
 	@echo "Migrations applied successfully!"
 
 migrate-down: ## Run database migrations down
 	@echo "Rolling back migrations..."
-	@migrate -path migrations -database "$(DB_URL)" down
+	@docker run --rm -v $(CURDIR)/migrations:/migrations --network gate-network migrate/migrate \
+		-path=/migrations -database "postgresql://gate_user:gate_password@gate-postgres:5432/gate_db?sslmode=disable" down -all
 	@echo "Migrations rolled back successfully!"
 
 migrate-create: ## Create new migration (use: make migrate-create name=migration_name)
@@ -33,7 +35,8 @@ ifndef name
 	@echo "Usage: make migrate-create name=<migration_name>"
 	@exit 1
 endif
-	@migrate create -ext sql -dir migrations -seq $(name)
+	@docker run --rm -v $(CURDIR)/migrations:/migrations migrate/migrate \
+		create -ext sql -dir /migrations -seq $(name)
 	@echo "Migration files created successfully!"
 
 docker-up: ## Start all Docker services
@@ -56,29 +59,28 @@ docker-rebuild: ## Rebuild and restart Docker services
 	@docker-compose -f docker/docker-compose.yml up -d --build
 	@echo "Docker services rebuilt successfully!"
 
-run: ## Run the API server
-	@echo "Starting API server..."
-	@go run cmd/api/main.go
+run: ## Run the API server (Docker)
+	@echo "Building and starting API server..."
+	@docker-compose -f docker/docker-compose.yml up --build api
 
-build: ## Build the application binary
+run-d: ## Run the API server in background (Docker)
+	@echo "Building and starting API server..."
+	@docker-compose -f docker/docker-compose.yml up -d --build api
+	@echo "API server started at http://localhost:8080"
+
+build: ## Build the application image
 	@echo "Building application..."
-	@mkdir -p bin
-	@CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/api ./cmd/api
-	@echo "Build completed: bin/api"
+	@docker-compose -f docker/docker-compose.yml build api
+	@echo "Build completed!"
 
 test: ## Run tests
 	@echo "Running tests..."
-	@go test -v -race -coverprofile=coverage.out ./...
+	@docker run --rm -v $(CURDIR):/app -w /app golang:1.22-alpine go test -v -race ./...
 	@echo "Tests completed!"
-
-test-coverage: test ## Run tests with coverage report
-	@echo "Generating coverage report..."
-	@go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report generated: coverage.html"
 
 lint: ## Run linter
 	@echo "Running linter..."
-	@golangci-lint run --timeout=5m
+	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:latest golangci-lint run --timeout=5m
 	@echo "Linting completed!"
 
 clean: ## Clean build artifacts
@@ -89,7 +91,7 @@ clean: ## Clean build artifacts
 
 seed: ## Seed database with test data
 	@echo "Seeding database..."
-	@psql "$(DB_URL)" -f scripts/seed.sql
+	@docker exec -i gate-postgres psql -U gate_user -d gate_db < scripts/seed.sql
 	@echo "Database seeded successfully!"
 
 dev: docker-up ## Start development environment
