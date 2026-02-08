@@ -59,6 +59,16 @@ var (
 	ErrInvalidToken     = errors.New("invalid token")
 )
 
+// Blacklist/Whitelist errors
+var (
+	ErrBlacklistEntryNotFound      = errors.New("blacklist entry not found")
+	ErrBlacklistEntryAlreadyExists = errors.New("blacklist entry already exists")
+	ErrInvalidBlacklistData        = errors.New("invalid blacklist data")
+	ErrWhitelistEntryNotFound      = errors.New("whitelist entry not found")
+	ErrWhitelistEntryAlreadyExists = errors.New("whitelist entry already exists")
+	ErrInvalidWhitelistData        = errors.New("invalid whitelist data")
+)
+
 // General errors
 var (
 	ErrInternal      = errors.New("internal server error")

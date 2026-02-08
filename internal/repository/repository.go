@@ -130,3 +130,59 @@ type AccessLogRepository interface {
 	// GetStatsByPeriod возвращает статистику проездов за период
 	GetStatsByPeriod(ctx context.Context, from, to string) (map[string]interface{}, error)
 }
+
+// BlacklistRepository определяет методы для работы с черным списком
+type BlacklistRepository interface {
+	// Create создает новую запись в черном списке
+	Create(ctx context.Context, entry *domain.BlacklistEntry) error
+
+	// GetByID возвращает запись по ID
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.BlacklistEntry, error)
+
+	// GetByLicensePlate возвращает запись по номеру автомобиля
+	GetByLicensePlate(ctx context.Context, licensePlate string) (*domain.BlacklistEntry, error)
+
+	// IsBlacklisted проверяет, находится ли номер в черном списке
+	// Возвращает (isBlacklisted, reason, error)
+	IsBlacklisted(ctx context.Context, licensePlate string) (bool, string, error)
+
+	// Update обновляет запись
+	Update(ctx context.Context, entry *domain.BlacklistEntry) error
+
+	// Delete удаляет запись
+	Delete(ctx context.Context, id uuid.UUID) error
+
+	// List возвращает список с пагинацией
+	List(ctx context.Context, limit, offset int) ([]*domain.BlacklistEntry, error)
+
+	// GetExpired возвращает истекшие записи для удаления
+	GetExpired(ctx context.Context) ([]*domain.BlacklistEntry, error)
+}
+
+// WhitelistRepository определяет методы для работы с белым списком
+type WhitelistRepository interface {
+	// Create создает новую запись в белом списке
+	Create(ctx context.Context, entry *domain.WhitelistEntry) error
+
+	// GetByID возвращает запись по ID
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.WhitelistEntry, error)
+
+	// GetByLicensePlate возвращает запись по номеру автомобиля
+	GetByLicensePlate(ctx context.Context, licensePlate string) (*domain.WhitelistEntry, error)
+
+	// IsWhitelisted проверяет, находится ли номер в белом списке
+	// Возвращает (isWhitelisted, reason, error)
+	IsWhitelisted(ctx context.Context, licensePlate string) (bool, string, error)
+
+	// Update обновляет запись
+	Update(ctx context.Context, entry *domain.WhitelistEntry) error
+
+	// Delete удаляет запись
+	Delete(ctx context.Context, id uuid.UUID) error
+
+	// List возвращает список с пагинацией
+	List(ctx context.Context, limit, offset int) ([]*domain.WhitelistEntry, error)
+
+	// GetExpired возвращает истекшие записи для удаления
+	GetExpired(ctx context.Context) ([]*domain.WhitelistEntry, error)
+}

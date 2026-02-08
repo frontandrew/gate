@@ -8,8 +8,11 @@ DROP FUNCTION IF EXISTS update_updated_at_column();
 
 -- Drop tables (в обратном порядке создания, учитывая зависимости)
 DROP TABLE IF EXISTS gates;
+DROP TABLE IF EXISTS blacklist;
+DROP TABLE IF EXISTS whitelist;
 DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS access_logs;
+DROP TABLE IF EXISTS pass_vehicles;
 DROP TABLE IF EXISTS passes;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS users;

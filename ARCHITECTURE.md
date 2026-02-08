@@ -6,10 +6,30 @@
 
 **Важно**: Автомобильный номер - это способ аутентификации пользователя в системе, а не самостоятельная сущность.
 
-**Правильная логика доступа:**
+**Правильная логика доступа с проверкой списков:**
 ```
-Номер авто → Автомобиль → Владелец (Пользователь) → Активный пропуск → Решение о доступе
+Номер авто → [БЕЛЫЙ СПИСОК?] → РАЗРЕШИТЬ ⭐ (безусловно, высший приоритет)
+           ↓ (нет в белом)
+           → [ЧЕРНЫЙ СПИСОК?] → ОТКАЗ (безусловно)
+           ↓ (нет в черном)
+           → Автомобиль → Владелец (Пользователь) → Активный пропуск → Решение о доступе
 ```
+
+**Приоритет проверок безопасности:**
+1. **Белый список (Whitelist)** - ВЫСШИЙ ПРИОРИТЕТ ⭐
+   - Проверяется ПЕРВЫМ
+   - Если номер в белом списке → немедленное РАЗРЕШЕНИЕ (отменяет все остальные проверки)
+   - Используется для служебных автомобилей (полиция, скорая помощь, пожарные, VIP)
+   - **Важно**: Белый список имеет приоритет над черным! Скорая помощь должна проехать всегда.
+
+2. **Черный список (Blacklist)** - ВТОРОЙ ПРИОРИТЕТ
+   - Проверяется после белого списка
+   - Если номер в черном списке → немедленный ОТКАЗ (отменяет проверку пропусков)
+   - Используется для заблокированных/украденных/нежелательных автомобилей
+
+3. **Стандартная проверка пропусков** - ТРЕТИЙ ПРИОРИТЕТ
+   - Только если номера нет ни в белом, ни в черном списках
+   - Полная цепочка проверки: Автомобиль → Владелец → Пропуска
 
 **Ключевые факты:**
 - ✅ Автомобиль не может существовать без владельца (owner_id NOT NULL)
@@ -61,6 +81,7 @@ CREATE INDEX idx_vehicles_license_plate ON vehicles(license_plate);
 CREATE INDEX idx_vehicles_is_active ON vehicles(is_active) WHERE is_active = true;
 
 -- 3. PASSES - пропуска выдаются ПОЛЬЗОВАТЕЛЮ
+-- Пользователь может иметь НЕСКОЛЬКО активных пропусков
 CREATE TABLE passes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -76,14 +97,61 @@ CREATE TABLE passes (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT pass_type_check CHECK (pass_type IN ('permanent', 'temporary')),
-    CONSTRAINT valid_dates_check CHECK (valid_until IS NULL OR valid_until > valid_from),
-    -- Один пользователь может иметь только один активный пропуск
-    CONSTRAINT unique_active_pass UNIQUE (user_id, is_active)
+    CONSTRAINT valid_dates_check CHECK (valid_until IS NULL OR valid_until > valid_from)
 );
 
 CREATE INDEX idx_passes_user_id ON passes(user_id);
 CREATE INDEX idx_passes_valid_dates ON passes(valid_from, valid_until);
 CREATE INDEX idx_passes_is_active ON passes(is_active) WHERE is_active = true;
+
+-- 4. PASS_VEHICLES - связь many-to-many между пропусками и автомобилями
+-- Один пропуск может включать несколько автомобилей как способов авторизации
+CREATE TABLE pass_vehicles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    pass_id UUID NOT NULL REFERENCES passes(id) ON DELETE CASCADE,
+    vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+    added_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    added_by UUID REFERENCES users(id),
+
+    CONSTRAINT unique_pass_vehicle UNIQUE (pass_id, vehicle_id)
+);
+
+CREATE INDEX idx_pass_vehicles_pass_id ON pass_vehicles(pass_id);
+CREATE INDEX idx_pass_vehicles_vehicle_id ON pass_vehicles(vehicle_id);
+
+-- 5. BLACKLIST - черный список номеров (запрещенные автомобили)
+CREATE TABLE blacklist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    license_plate VARCHAR(20) NOT NULL UNIQUE,
+    reason VARCHAR(500) NOT NULL,
+    added_by UUID NOT NULL REFERENCES users(id),
+    added_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP,  -- NULL = бессрочно
+    is_active BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT blacklist_license_plate_format CHECK (license_plate ~ '^[A-ZА-Я0-9]+$')
+);
+
+CREATE INDEX idx_blacklist_license_plate ON blacklist(license_plate);
+CREATE INDEX idx_blacklist_is_active ON blacklist(is_active) WHERE is_active = true;
+CREATE INDEX idx_blacklist_expires_at ON blacklist(expires_at) WHERE expires_at IS NOT NULL;
+
+-- 6. WHITELIST - белый список номеров (всегда разрешенные автомобили)
+CREATE TABLE whitelist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    license_plate VARCHAR(20) NOT NULL UNIQUE,
+    reason VARCHAR(500) NOT NULL,  -- Например: "Полиция", "Скорая помощь", "VIP"
+    added_by UUID NOT NULL REFERENCES users(id),
+    added_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP,  -- NULL = бессрочно
+    is_active BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT whitelist_license_plate_format CHECK (license_plate ~ '^[A-ZА-Я0-9]+$')
+);
+
+CREATE INDEX idx_whitelist_license_plate ON whitelist(license_plate);
+CREATE INDEX idx_whitelist_is_active ON whitelist(is_active) WHERE is_active = true;
+CREATE INDEX idx_whitelist_expires_at ON whitelist(expires_at) WHERE expires_at IS NOT NULL;
 
 -- 4. ACCESS_LOGS - фиксируют пользователя и способ доступа
 CREATE TABLE access_logs (
@@ -145,18 +213,30 @@ COMMENT ON COLUMN access_logs.vehicle_id IS 'Вспомогательная ин
                 ↓
 2. ML сервис распознает номер → "А123ВС777"
                 ↓
-3. Поиск автомобиля в БД по номеру
+3. Поиск автомобиля в БД по номеру (vehicles.license_plate)
                 ↓
-4. Получение владельца автомобиля (User)  ← КЛЮЧЕВОЙ МОМЕНТ!
+4. Получение владельца автомобиля (User через owner_id)  ← КЛЮЧЕВОЙ МОМЕНТ!
                 ↓
-5. Проверка активного пропуска пользователя
+5. Поиск активных пропусков пользователя, которые включают этот автомобиль
+   SQL: SELECT p.* FROM passes p
+        JOIN pass_vehicles pv ON pv.pass_id = p.id
+        WHERE p.user_id = ? AND pv.vehicle_id = ? AND p.is_active = true
                 ↓
-6. Проверка временных ограничений (если пропуск временный)
+6. Проверка временных ограничений для каждого найденного пропуска
+   - Проверка valid_from ≤ NOW()
+   - Проверка valid_until ≥ NOW() (если пропуск временный)
                 ↓
-7. Запись в access_logs (user_id + vehicle_id)
+7. Если хотя бы один пропуск валиден → ДОСТУП РАЗРЕШЕН
                 ↓
-8. Решение: доступ разрешен/запрещен
+8. Запись в access_logs (user_id + vehicle_id + pass_id)
+                ↓
+9. Решение: доступ разрешен/запрещен
 ```
+
+**Гибкость архитектуры:**
+- Один пользователь может иметь несколько активных пропусков (постоянный + временный для гостя)
+- Один пропуск может включать несколько автомобилей
+- Один автомобиль может использоваться в нескольких пропусках
 
 ### Код проверки доступа (Go)
 
@@ -179,10 +259,34 @@ func (s *AccessService) CheckAccess(ctx context.Context, req *CheckAccessRequest
         return nil, fmt.Errorf("failed to recognize plate: %w", err)
     }
 
-    // 2. Найти автомобиль по номеру
-    vehicle, err := s.vehicleRepo.GetByLicensePlate(ctx, recognized.LicensePlate)
+    licensePlate := recognized.LicensePlate
+
+    // 2. ПРИОРИТЕТ 1 (ВЫСШИЙ): Проверить БЕЛЫЙ СПИСОК
+    isWhitelisted, whitelistReason, err := s.whitelistRepo.IsWhitelisted(ctx, licensePlate)
     if err != nil {
-        return s.denyAccess(ctx, recognized.LicensePlate, "Vehicle not found", req)
+        s.logger.Error().Err(err).Msg("Failed to check whitelist")
+        // Продолжаем работу даже при ошибке
+    }
+    if isWhitelisted {
+        // РАЗРЕШАЕМ доступ БЕЗ ДАЛЬНЕЙШИХ ПРОВЕРОК!
+        // Белый список отменяет проверку черного списка и пропусков
+        return s.grantAccessWhitelist(ctx, licensePlate, whitelistReason, req, recognized)
+    }
+
+    // 3. ПРИОРИТЕТ 2: Проверить ЧЕРНЫЙ СПИСОК
+    isBlacklisted, blacklistReason, err := s.blacklistRepo.IsBlacklisted(ctx, licensePlate)
+    if err != nil {
+        s.logger.Error().Err(err).Msg("Failed to check blacklist")
+    }
+    if isBlacklisted {
+        return s.denyAccess(ctx, licensePlate, fmt.Sprintf("Blacklisted: %s", blacklistReason), req)
+    }
+
+    // 4. ПРИОРИТЕТ 3: Стандартная проверка пропусков
+    // Найти автомобиль по номеру
+    vehicle, err := s.vehicleRepo.GetByLicensePlate(ctx, licensePlate)
+    if err != nil {
+        return s.denyAccess(ctx, licensePlate, "Vehicle not found", req)
     }
 
     // 3. КЛЮЧЕВОЕ: получить владельца автомобиля
@@ -196,21 +300,36 @@ func (s *AccessService) CheckAccess(ctx context.Context, req *CheckAccessRequest
         return s.denyAccess(ctx, recognized.LicensePlate, "User is not active", req)
     }
 
-    // 4. Проверить активный пропуск ПОЛЬЗОВАТЕЛЯ
-    pass, err := s.passRepo.GetActivePassByUser(ctx, user.ID)
-    if err != nil || pass == nil {
-        return s.denyAccess(ctx, recognized.LicensePlate, "No valid pass for user", req)
+    // 4. Найти все активные пропуска ПОЛЬЗОВАТЕЛЯ, которые включают этот автомобиль
+    passes, err := s.passRepo.GetActivePassesByUserAndVehicle(ctx, user.ID, vehicle.ID)
+    if err != nil || len(passes) == 0 {
+        return s.denyAccess(ctx, recognized.LicensePlate, "No valid pass for this vehicle", req)
     }
 
-    // 5. Проверить временные ограничения
-    if pass.PassType == "temporary" {
-        now := time.Now()
+    // 5. Проверить временные ограничения для всех найденных пропусков
+    // Достаточно хотя бы одного валидного пропуска
+    var validPass *domain.Pass
+    now := time.Now()
+
+    for _, pass := range passes {
+        // Проверяем временные рамки
         if now.Before(pass.ValidFrom) {
-            return s.denyAccess(ctx, recognized.LicensePlate, "Pass not yet valid", req)
+            continue // Пропуск еще не начал действовать
         }
-        if pass.ValidUntil != nil && now.After(*pass.ValidUntil) {
-            return s.denyAccess(ctx, recognized.LicensePlate, "Pass expired", req)
+
+        if pass.PassType == "temporary" && pass.ValidUntil != nil {
+            if now.After(*pass.ValidUntil) {
+                continue // Пропуск истек
+            }
         }
+
+        // Нашли валидный пропуск!
+        validPass = pass
+        break
+    }
+
+    if validPass == nil {
+        return s.denyAccess(ctx, recognized.LicensePlate, "All passes expired or not yet valid", req)
     }
 
     // 6. Записать лог успешного доступа
@@ -221,7 +340,7 @@ func (s *AccessService) CheckAccess(ctx context.Context, req *CheckAccessRequest
         ImageURL:               req.ImageURL,
         RecognitionConfidence:  recognized.Confidence,
         AccessGranted:          true,
-        AccessReason:           "Valid pass found",
+        AccessReason:           fmt.Sprintf("Valid %s pass found (ID: %s)", validPass.PassType, validPass.ID),
         GateID:                 req.GateID,
         Direction:              req.Direction,
     }
@@ -230,15 +349,16 @@ func (s *AccessService) CheckAccess(ctx context.Context, req *CheckAccessRequest
         s.logger.Error().Err(err).Msg("Failed to create access log")
     }
 
-    // 7. Вернуть результат с информацией о пользователе
+    // 7. Вернуть результат с информацией о пользователе и пропуске
     return &CheckAccessResponse{
         Success:       true,
         AccessGranted: true,
         User:          user,              // Возвращаем пользователя
         Vehicle:       vehicle,
+        Pass:          validPass,          // Возвращаем использованный пропуск
         LicensePlate:  recognized.LicensePlate,
         Confidence:    recognized.Confidence,
-        Reason:        "Access granted: valid pass",
+        Reason:        fmt.Sprintf("Access granted: %s pass", validPass.PassType),
         AccessLogID:   accessLog.ID,
     }, nil
 }

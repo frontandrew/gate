@@ -33,12 +33,14 @@ type CheckAccessResponse struct {
 
 // Service содержит бизнес-логику проверки доступа
 type Service struct {
-	vehicleRepo  repository.VehicleRepository
-	userRepo     repository.UserRepository
-	passRepo     repository.PassRepository
+	vehicleRepo   repository.VehicleRepository
+	userRepo      repository.UserRepository
+	passRepo      repository.PassRepository
 	accessLogRepo repository.AccessLogRepository
-	mlClient     ml.Client
-	logger       logger.Logger
+	whitelistRepo repository.WhitelistRepository // ПРИОРИТЕТ 1
+	blacklistRepo repository.BlacklistRepository // ПРИОРИТЕТ 2
+	mlClient      ml.Client
+	logger        logger.Logger
 	minConfidence float64
 }
 
@@ -48,6 +50,8 @@ func NewService(
 	userRepo repository.UserRepository,
 	passRepo repository.PassRepository,
 	accessLogRepo repository.AccessLogRepository,
+	whitelistRepo repository.WhitelistRepository,
+	blacklistRepo repository.BlacklistRepository,
 	mlClient ml.Client,
 	logger logger.Logger,
 	minConfidence float64,
@@ -57,6 +61,8 @@ func NewService(
 		userRepo:      userRepo,
 		passRepo:      passRepo,
 		accessLogRepo: accessLogRepo,
+		whitelistRepo: whitelistRepo,
+		blacklistRepo: blacklistRepo,
 		mlClient:      mlClient,
 		logger:        logger,
 		minConfidence: minConfidence,
@@ -64,8 +70,10 @@ func NewService(
 }
 
 // CheckAccess - КЛЮЧЕВОЙ МЕТОД системы
-// Реализует user-centric логику проверки доступа:
-// Номер авто → Автомобиль → Владелец (Пользователь) → Активные пропуска → Решение о доступе
+// Реализует user-centric логику проверки доступа с приоритетными списками:
+// 1. Номер авто → [БЕЛЫЙ СПИСОК?] → РАЗРЕШИТЬ (безусловно, высший приоритет)
+// 2. Номер авто → [ЧЕРНЫЙ СПИСОК?] → ОТКАЗАТЬ (безусловно)
+// 3. Номер авто → Автомобиль → Владелец (Пользователь) → Активные пропуска → Решение о доступе
 func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*CheckAccessResponse, error) {
 	s.logger.Info("Starting access check", map[string]interface{}{
 		"gate_id":   req.GateID,
@@ -106,7 +114,48 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 		"confidence": recognitionResult.Confidence,
 	})
 
-	// ШАГ 2: Находим автомобиль в БД по номеру
+	// ШАГ 2 (ПРИОРИТЕТ 1): Проверяем БЕЛЫЙ СПИСОК
+	// Если номер в белом списке - РАЗРЕШАЕМ доступ БЕЗ ДАЛЬНЕЙШИХ ПРОВЕРОК
+	isWhitelisted, whitelistReason, err := s.whitelistRepo.IsWhitelisted(ctx, recognitionResult.LicensePlate)
+	if err != nil {
+		s.logger.Error("Failed to check whitelist", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Продолжаем работу даже при ошибке whitelist (fail-open для критичных служб)
+	}
+	if isWhitelisted {
+		s.logger.Info("License plate is whitelisted", map[string]interface{}{
+			"plate":  recognitionResult.LicensePlate,
+			"reason": whitelistReason,
+		})
+		response.AccessGranted = true
+		response.Reason = fmt.Sprintf("Whitelisted: %s", whitelistReason)
+		s.logAccess(ctx, response, req, nil, nil, nil)
+		return response, nil
+	}
+
+	// ШАГ 3 (ПРИОРИТЕТ 2): Проверяем ЧЕРНЫЙ СПИСОК
+	// Если номер в черном списке - ОТКАЗЫВАЕМ в доступе
+	isBlacklisted, blacklistReason, err := s.blacklistRepo.IsBlacklisted(ctx, recognitionResult.LicensePlate)
+	if err != nil {
+		s.logger.Error("Failed to check blacklist", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Продолжаем работу даже при ошибке blacklist
+	}
+	if isBlacklisted {
+		s.logger.Info("License plate is blacklisted", map[string]interface{}{
+			"plate":  recognitionResult.LicensePlate,
+			"reason": blacklistReason,
+		})
+		response.AccessGranted = false
+		response.Reason = fmt.Sprintf("Blacklisted: %s", blacklistReason)
+		s.logAccess(ctx, response, req, nil, nil, nil)
+		return response, nil
+	}
+
+	// ШАГ 4 (ПРИОРИТЕТ 3): Стандартная проверка через пропуски
+	// Находим автомобиль в БД по номеру
 	vehicle, err := s.vehicleRepo.GetByLicensePlate(ctx, recognitionResult.LicensePlate)
 	if err != nil {
 		if err == domain.ErrVehicleNotFound {
@@ -137,7 +186,7 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 
 	response.Vehicle = vehicle
 
-	// ШАГ 3: Получаем владельца автомобиля (ПОЛЬЗОВАТЕЛЬ - центральная сущность!)
+	// ШАГ 5: Получаем владельца автомобиля (ПОЛЬЗОВАТЕЛЬ - центральная сущность!)
 	user, err := s.userRepo.GetByID(ctx, vehicle.OwnerID)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
@@ -169,7 +218,7 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 
 	response.User = user
 
-	// ШАГ 4: Получаем ВСЕ активные пропуска пользователя, которые включают этот автомобиль
+	// ШАГ 6: Получаем ВСЕ активные пропуска пользователя, которые включают этот автомобиль
 	// ВАЖНО: один пользователь может иметь несколько активных пропусков!
 	passes, err := s.passRepo.GetActivePassesByUserAndVehicle(ctx, user.ID, vehicle.ID)
 	if err != nil {
@@ -190,7 +239,7 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 		return response, nil
 	}
 
-	// ШАГ 5: Проверяем временные ограничения для КАЖДОГО пропуска
+	// ШАГ 7: Проверяем временные ограничения для КАЖДОГО пропуска
 	// Доступ разрешается, если ХОТЯ БЫ ОДИН пропуск действителен
 	var validPass *domain.Pass
 	for _, pass := range passes {
@@ -211,7 +260,7 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 		return response, nil
 	}
 
-	// ШАГ 6: ДОСТУП РАЗРЕШЕН!
+	// ШАГ 8: ДОСТУП РАЗРЕШЕН!
 	s.logger.Info("Access granted", map[string]interface{}{
 		"user_id":    user.ID,
 		"vehicle_id": vehicle.ID,
