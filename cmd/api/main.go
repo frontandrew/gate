@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/frontandrew/gate/internal/delivery/http/middleware"
 	deliveryHTTP "github.com/frontandrew/gate/internal/delivery/http"
 	"github.com/frontandrew/gate/internal/infrastructure/ml"
 	"github.com/frontandrew/gate/internal/pkg/config"
