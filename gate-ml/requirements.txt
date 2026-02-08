@@ -1,0 +1,14 @@
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+python-multipart==0.0.9
+
+# ML libraries
+easyocr==1.7.1
+opencv-python-headless==4.9.0.80
+Pillow==10.2.0
+numpy==1.26.3
+
+# Logging
+python-json-logger==2.0.7
