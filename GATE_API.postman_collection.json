@@ -1,0 +1,630 @@
+{
+	"info": {
+		"_postman_id": "gate-api-collection",
+		"name": "GATE API - Vehicle Access Control System",
+		"description": "Complete API collection for GATE vehicle access control system with blacklist/whitelist security",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check API health status"
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('user_id', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"full_name\": \"New Test User\",\n    \"phone\": \"+7 999 999 99 99\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new user account"
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.access_token);",
+									"    pm.environment.set('refresh_token', response.data.refresh_token);",
+									"    pm.environment.set('current_user_id', response.data.user.id);",
+									"    console.log('Access token saved:', response.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@gate.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login with email and password. Saves access_token to environment."
+					}
+				},
+				{
+					"name": "Get Current User (Me)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "me"]
+						},
+						"description": "Get current authenticated user information"
+					}
+				}
+			]
+		},
+		{
+			"name": "Vehicles",
+			"item": [
+				{
+					"name": "Create Vehicle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"owner_id\": \"{{current_user_id}}\",\n    \"license_plate\": \"Н999НН777\",\n    \"vehicle_type\": \"car\",\n    \"model\": \"Toyota Camry\",\n    \"color\": \"Черный\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/vehicles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "vehicles"]
+						},
+						"description": "Register a new vehicle"
+					}
+				},
+				{
+					"name": "Get My Vehicles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/vehicles/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "vehicles", "me"]
+						},
+						"description": "Get all vehicles owned by current user"
+					}
+				},
+				{
+					"name": "Get Vehicle by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/vehicles/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "vehicles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "10000000-0000-0000-0000-000000000001"
+								}
+							]
+						},
+						"description": "Get vehicle details by ID"
+					}
+				}
+			]
+		},
+		{
+			"name": "Passes",
+			"item": [
+				{
+					"name": "Get My Passes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/passes/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "passes", "me"]
+						},
+						"description": "Get all passes for current user"
+					}
+				},
+				{
+					"name": "Get Pass by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/passes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "passes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "30000000-0000-0000-0000-000000000001"
+								}
+							]
+						},
+						"description": "Get pass details by ID"
+					}
+				},
+				{
+					"name": "Create Pass (Admin/Guard)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"00000000-0000-0000-0000-000000000002\",\n    \"pass_type\": \"temporary\",\n    \"valid_from\": \"2026-02-09T00:00:00Z\",\n    \"valid_until\": \"2026-03-09T23:59:59Z\",\n    \"vehicle_ids\": [\n        \"10000000-0000-0000-0000-000000000002\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/passes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "passes"]
+						},
+						"description": "Create a new pass (requires admin or guard role)"
+					}
+				},
+				{
+					"name": "Revoke Pass (Admin/Guard)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Временный пропуск больше не требуется\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/passes/:id/revoke",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "passes", ":id", "revoke"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "30000000-0000-0000-0000-000000000004"
+								}
+							]
+						},
+						"description": "Revoke a pass (requires admin or guard role)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Access Control",
+			"item": [
+				{
+					"name": "Check Access (Gate)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"image_base64\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\n    \"gate_id\": \"gate_001\",\n    \"direction\": \"IN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/access/check",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "access", "check"]
+						},
+						"description": "Check vehicle access (public endpoint for gates/cameras). NOTE: ML service must be running for this to work."
+					}
+				},
+				{
+					"name": "Get My Access Logs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/access/me/logs?limit=50&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "access", "me", "logs"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get access logs for current user"
+					}
+				},
+				{
+					"name": "Get Vehicle Access Logs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/access/logs/vehicle/:id?limit=50&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "access", "logs", "vehicle", ":id"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "10000000-0000-0000-0000-000000000001"
+								}
+							]
+						},
+						"description": "Get access logs for specific vehicle"
+					}
+				},
+				{
+					"name": "Get All Access Logs (Admin/Guard)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/access/logs?limit=100&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "access", "logs"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "user_id",
+									"value": "00000000-0000-0000-0000-000000000002",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all access logs (requires admin or guard role). Optionally filter by user_id."
+					}
+				}
+			]
+		},
+		{
+			"name": "Test Users (seed data)",
+			"item": [
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.access_token);",
+									"    pm.environment.set('current_user_id', response.data.user.id);",
+									"    console.log('Logged in as admin');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@gate.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login as admin@gate.com (role: admin)"
+					}
+				},
+				{
+					"name": "Login as Ivan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.access_token);",
+									"    pm.environment.set('current_user_id', response.data.user.id);",
+									"    console.log('Logged in as Ivan');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"ivan@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login as ivan@example.com (role: user, has 2 vehicles and permanent pass)"
+					}
+				},
+				{
+					"name": "Login as Guard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.access_token);",
+									"    pm.environment.set('current_user_id', response.data.user.id);",
+									"    console.log('Logged in as guard');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"guard@gate.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login as guard@gate.com (role: guard)"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
