@@ -25,8 +25,8 @@ API будет доступен на `http://localhost:8080`
 1. Откройте Postman
 2. Нажмите **Import** в левом верхнем углу
 3. Импортируйте файлы:
-   - `GATE_API.postman_collection.json` - коллекция запросов
-   - `GATE_API.postman_environment.json` - переменные окружения
+   - `.postman/GATE_API.postman_collection.json` - коллекция запросов
+   - `.postman/GATE_API.postman_environment.json` - переменные окружения
 4. Выберите environment **"GATE API - Local Development"** в правом верхнем углу
 
 ---
