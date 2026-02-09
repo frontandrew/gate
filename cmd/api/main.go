@@ -16,6 +16,7 @@ import (
 	"github.com/frontandrew/gate/internal/pkg/jwt"
 	"github.com/frontandrew/gate/internal/pkg/logger"
 	"github.com/frontandrew/gate/internal/pkg/redis"
+	"github.com/frontandrew/gate/internal/repository/cached"
 	"github.com/frontandrew/gate/internal/repository/postgres"
 	"github.com/frontandrew/gate/internal/usecase/access"
 	"github.com/frontandrew/gate/internal/usecase/auth"
@@ -95,11 +96,17 @@ func main() {
 	passRepo := postgres.NewPassRepository(db)
 	passVehicleRepo := postgres.NewPassVehicleRepository(db)
 	accessLogRepo := postgres.NewAccessLogRepository(db)
-	whitelistRepo := postgres.NewWhitelistRepository(db)
-	blacklistRepo := postgres.NewBlacklistRepository(db)
 	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
 
-	log.Info("Repositories initialized")
+	// Кэшируемые репозитории
+	whitelistBaseRepo := postgres.NewWhitelistRepository(db)
+	blacklistBaseRepo := postgres.NewBlacklistRepository(db)
+	whitelistRepo := cached.NewWhitelistRepository(whitelistBaseRepo, redisClient)
+	blacklistRepo := cached.NewBlacklistRepository(blacklistBaseRepo, redisClient)
+
+	log.Info("Repositories initialized", map[string]interface{}{
+		"cached": "whitelist, blacklist",
+	})
 
 	// =========================================================================
 	// Создание ML клиента
