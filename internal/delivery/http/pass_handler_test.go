@@ -98,7 +98,7 @@ func TestPassHandler_CreatePass(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -182,7 +182,7 @@ func TestPassHandler_GetMyPasses(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -259,7 +259,7 @@ func TestPassHandler_GetPassByID(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -376,7 +376,7 @@ func TestPassHandler_RevokePass(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)

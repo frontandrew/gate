@@ -1,4 +1,4 @@
-.PHONY: help install migrate-up migrate-down migrate-create docker-up docker-down docker-logs docker-rebuild run build test test-coverage lint clean seed dev
+.PHONY: help install migrate-up migrate-down migrate-create docker-up docker-down docker-logs docker-rebuild run build test test-coverage lint typecheck clean seed dev
 
 .DEFAULT_GOAL := help
 
@@ -82,6 +82,11 @@ lint: ## Run linter
 	@echo "Running linter..."
 	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:latest golangci-lint run --timeout=5m
 	@echo "Linting completed!"
+
+typecheck: ## Check Go types and run static analysis
+	@echo "Checking types..."
+	@docker run --rm -v $(CURDIR):/app -w /app golang:1.22-alpine go vet ./...
+	@echo "Type checking completed!"
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

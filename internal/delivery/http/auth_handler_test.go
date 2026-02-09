@@ -114,7 +114,7 @@ func TestAuthHandler_Register(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -215,7 +215,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -281,7 +281,7 @@ func TestAuthHandler_Logout(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -372,7 +372,7 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)

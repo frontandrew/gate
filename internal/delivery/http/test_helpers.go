@@ -16,11 +16,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Ключ для хранения user_id в контексте
-type contextKey string
-
-const userIDContextKey contextKey = "user_id"
-
 // ============================================================================
 // Mock Services
 // ============================================================================

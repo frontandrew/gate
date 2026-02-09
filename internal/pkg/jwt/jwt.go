@@ -108,7 +108,7 @@ func (ts *TokenService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	// Проверяем срок действия
-	if claims.ExpiresAt.Time.Before(time.Now()) {
+	if claims.ExpiresAt.Before(time.Now()) {
 		return nil, domain.ErrTokenExpired
 	}
 

@@ -110,7 +110,7 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -194,7 +194,7 @@ func TestVehicleHandler_GetMyVehicles(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
@@ -279,7 +279,7 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			var response map[string]interface{}
-			json.Unmarshal(w.Body.Bytes(), &response)
+			_ = json.Unmarshal(w.Body.Bytes(), &response)
 			tt.checkResponse(t, response)
 
 			mockService.AssertExpectations(t)
