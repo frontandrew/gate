@@ -13,12 +13,12 @@ import (
 
 // CreatePassRequest - запрос на создание пропуска
 type CreatePassRequest struct {
-	UserID      uuid.UUID       `json:"user_id" validate:"required"`
-	PassType    domain.PassType `json:"pass_type" validate:"required"`
-	ValidFrom   time.Time       `json:"valid_from" validate:"required"`
-	ValidUntil  *time.Time      `json:"valid_until,omitempty"`
-	VehicleIDs  []uuid.UUID     `json:"vehicle_ids" validate:"required,min=1"`
-	CreatedBy   uuid.UUID       `json:"created_by" validate:"required"`
+	UserID     uuid.UUID       `json:"user_id" validate:"required"`
+	PassType   domain.PassType `json:"pass_type" validate:"required"`
+	ValidFrom  time.Time       `json:"valid_from" validate:"required"`
+	ValidUntil *time.Time      `json:"valid_until,omitempty"`
+	VehicleIDs []uuid.UUID     `json:"vehicle_ids" validate:"required,min=1"`
+	CreatedBy  uuid.UUID       `json:"created_by" validate:"required"`
 }
 
 // Service содержит бизнес-логику работы с пропусками
@@ -128,7 +128,7 @@ func (s *Service) CreatePass(ctx context.Context, req *CreatePassRequest) (*doma
 	}
 
 	s.logger.Info("Pass created successfully", map[string]interface{}{
-		"pass_id":       pass.ID,
+		"pass_id":        pass.ID,
 		"vehicles_count": len(req.VehicleIDs),
 	})
 

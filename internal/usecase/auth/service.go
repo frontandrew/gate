@@ -30,18 +30,18 @@ type LoginRequest struct {
 
 // LoginResponse - ответ на вход
 type LoginResponse struct {
-	User         *domain.User      `json:"user"`
-	AccessToken  string            `json:"access_token"`
-	RefreshToken string            `json:"refresh_token"`
-	ExpiresAt    string            `json:"expires_at"`
+	User         *domain.User `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	ExpiresAt    string       `json:"expires_at"`
 }
 
 // Service содержит бизнес-логику аутентификации
 type Service struct {
-	userRepo             repository.UserRepository
-	refreshTokenRepo     repository.RefreshTokenRepository
-	tokenService         *jwt.TokenService
-	logger               logger.Logger
+	userRepo         repository.UserRepository
+	refreshTokenRepo repository.RefreshTokenRepository
+	tokenService     *jwt.TokenService
+	logger           logger.Logger
 }
 
 // NewService создает новый экземпляр AuthService

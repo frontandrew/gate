@@ -10,11 +10,11 @@ import (
 // Автомобили в черном списке БЛОКИРУЮТСЯ независимо от наличия пропусков
 type BlacklistEntry struct {
 	ID           uuid.UUID  `json:"id"`
-	LicensePlate string     `json:"license_plate"`          // Номер автомобиля (нормализованный)
-	Reason       string     `json:"reason"`                 // Причина блокировки
-	AddedBy      uuid.UUID  `json:"added_by"`               // Кто добавил в список
+	LicensePlate string     `json:"license_plate"` // Номер автомобиля (нормализованный)
+	Reason       string     `json:"reason"`        // Причина блокировки
+	AddedBy      uuid.UUID  `json:"added_by"`      // Кто добавил в список
 	AddedAt      time.Time  `json:"added_at"`
-	ExpiresAt    *time.Time `json:"expires_at,omitempty"`   // NULL = бессрочно
+	ExpiresAt    *time.Time `json:"expires_at,omitempty"` // NULL = бессрочно
 	IsActive     bool       `json:"is_active"`
 }
 

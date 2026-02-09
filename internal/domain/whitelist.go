@@ -10,11 +10,11 @@ import (
 // Автомобили в белом списке ВСЕГДА получают доступ без проверки пропусков
 type WhitelistEntry struct {
 	ID           uuid.UUID  `json:"id"`
-	LicensePlate string     `json:"license_plate"`          // Номер автомобиля (нормализованный)
-	Reason       string     `json:"reason"`                 // Причина безусловного доступа
-	AddedBy      uuid.UUID  `json:"added_by"`               // Кто добавил в список
+	LicensePlate string     `json:"license_plate"` // Номер автомобиля (нормализованный)
+	Reason       string     `json:"reason"`        // Причина безусловного доступа
+	AddedBy      uuid.UUID  `json:"added_by"`      // Кто добавил в список
 	AddedAt      time.Time  `json:"added_at"`
-	ExpiresAt    *time.Time `json:"expires_at,omitempty"`   // NULL = бессрочно
+	ExpiresAt    *time.Time `json:"expires_at,omitempty"` // NULL = бессрочно
 	IsActive     bool       `json:"is_active"`
 }
 

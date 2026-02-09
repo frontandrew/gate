@@ -21,9 +21,9 @@ type Claims struct {
 
 // TokenService управляет созданием и валидацией JWT токенов
 type TokenService struct {
-	secretKey      string
-	accessExpiry   time.Duration
-	refreshExpiry  time.Duration
+	secretKey     string
+	accessExpiry  time.Duration
+	refreshExpiry time.Duration
 }
 
 // TokenPair содержит access и refresh токены

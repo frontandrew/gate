@@ -12,11 +12,11 @@ import (
 
 // CreateVehicleRequest - запрос на создание автомобиля
 type CreateVehicleRequest struct {
-	OwnerID      uuid.UUID           `json:"owner_id" validate:"required"`
-	LicensePlate string              `json:"license_plate" validate:"required"`
-	VehicleType  domain.VehicleType  `json:"vehicle_type" validate:"required"`
-	Model        string              `json:"model,omitempty"`
-	Color        string              `json:"color,omitempty"`
+	OwnerID      uuid.UUID          `json:"owner_id" validate:"required"`
+	LicensePlate string             `json:"license_plate" validate:"required"`
+	VehicleType  domain.VehicleType `json:"vehicle_type" validate:"required"`
+	Model        string             `json:"model,omitempty"`
+	Color        string             `json:"color,omitempty"`
 }
 
 // Service содержит бизнес-логику работы с автомобилями

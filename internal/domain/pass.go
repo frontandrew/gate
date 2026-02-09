@@ -20,10 +20,10 @@ const (
 // Каждый пропуск может включать несколько автомобилей (через pass_vehicles)
 type Pass struct {
 	ID           uuid.UUID  `json:"id"`
-	UserID       uuid.UUID  `json:"user_id"`                 // Пользователь, которому выдан пропуск
+	UserID       uuid.UUID  `json:"user_id"` // Пользователь, которому выдан пропуск
 	PassType     PassType   `json:"pass_type"`
 	ValidFrom    time.Time  `json:"valid_from"`
-	ValidUntil   *time.Time `json:"valid_until,omitempty"`   // NULL для постоянных пропусков
+	ValidUntil   *time.Time `json:"valid_until,omitempty"` // NULL для постоянных пропусков
 	IsActive     bool       `json:"is_active"`
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
 	RevokedBy    *uuid.UUID `json:"revoked_by,omitempty"`

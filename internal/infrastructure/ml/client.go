@@ -12,12 +12,12 @@ import (
 
 // RecognitionResult содержит результат распознавания номера
 type RecognitionResult struct {
-	Success         bool         `json:"success"`
-	LicensePlate    string       `json:"license_plate"`
-	Confidence      float64      `json:"confidence"`
-	BoundingBox     *BoundingBox `json:"bounding_box,omitempty"`
-	ProcessingTime  float64      `json:"processing_time_ms"`
-	Error           string       `json:"error,omitempty"`
+	Success        bool         `json:"success"`
+	LicensePlate   string       `json:"license_plate"`
+	Confidence     float64      `json:"confidence"`
+	BoundingBox    *BoundingBox `json:"bounding_box,omitempty"`
+	ProcessingTime float64      `json:"processing_time_ms"`
+	Error          string       `json:"error,omitempty"`
 }
 
 // BoundingBox содержит координаты распознанного номера на изображении

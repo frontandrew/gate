@@ -52,9 +52,9 @@ type RedisConfig struct {
 
 // JWTConfig содержит настройки JWT аутентификации
 type JWTConfig struct {
-	SecretKey       string
-	AccessExpiry    time.Duration
-	RefreshExpiry   time.Duration
+	SecretKey     string
+	AccessExpiry  time.Duration
+	RefreshExpiry time.Duration
 }
 
 // MLConfig содержит настройки ML сервиса
@@ -73,9 +73,9 @@ type CORSConfig struct {
 
 // LoggerConfig содержит настройки логирования
 type LoggerConfig struct {
-	Level      string
-	Format     string // json или console
-	Output     string // stdout или путь к файлу
+	Level  string
+	Format string // json или console
+	Output string // stdout или путь к файлу
 }
 
 // Load загружает конфигурацию из переменных окружения

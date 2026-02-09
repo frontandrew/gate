@@ -21,14 +21,14 @@ type CheckAccessRequest struct {
 
 // CheckAccessResponse - ответ на проверку доступа
 type CheckAccessResponse struct {
-	AccessGranted bool              `json:"access_granted"`
-	LicensePlate  string            `json:"license_plate"`
-	Confidence    float64           `json:"confidence"`
-	Vehicle       *domain.Vehicle   `json:"vehicle,omitempty"`
-	User          *domain.User      `json:"user,omitempty"`
-	Pass          *domain.Pass      `json:"pass,omitempty"`
-	Reason        string            `json:"reason"`
-	Timestamp     time.Time         `json:"timestamp"`
+	AccessGranted bool            `json:"access_granted"`
+	LicensePlate  string          `json:"license_plate"`
+	Confidence    float64         `json:"confidence"`
+	Vehicle       *domain.Vehicle `json:"vehicle,omitempty"`
+	User          *domain.User    `json:"user,omitempty"`
+	Pass          *domain.Pass    `json:"pass,omitempty"`
+	Reason        string          `json:"reason"`
+	Timestamp     time.Time       `json:"timestamp"`
 }
 
 // Service содержит бизнес-логику проверки доступа
@@ -251,7 +251,7 @@ func (s *Service) CheckAccess(ctx context.Context, req *CheckAccessRequest) (*Ch
 
 	if validPass == nil {
 		s.logger.Info("All passes are expired or invalid", map[string]interface{}{
-			"user_id":     user.ID,
+			"user_id":      user.ID,
 			"passes_count": len(passes),
 		})
 		response.AccessGranted = false

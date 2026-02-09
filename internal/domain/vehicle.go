@@ -22,8 +22,8 @@ const (
 // ВАЖНО: Автомобиль ОБЯЗАТЕЛЬНО привязан к владельцу (OwnerID NOT NULL)
 type Vehicle struct {
 	ID           uuid.UUID   `json:"id"`
-	OwnerID      uuid.UUID   `json:"owner_id"`           // ОБЯЗАТЕЛЬНАЯ связь с User
-	LicensePlate string      `json:"license_plate"`      // Номер автомобиля (уникальный)
+	OwnerID      uuid.UUID   `json:"owner_id"`      // ОБЯЗАТЕЛЬНАЯ связь с User
+	LicensePlate string      `json:"license_plate"` // Номер автомобиля (уникальный)
 	VehicleType  VehicleType `json:"vehicle_type"`
 	Model        string      `json:"model,omitempty"`
 	Color        string      `json:"color,omitempty"`

@@ -57,8 +57,8 @@ func main() {
 	defer database.Close(db)
 
 	log.Info("Connected to PostgreSQL", map[string]interface{}{
-		"host": cfg.Database.Host,
-		"port": cfg.Database.Port,
+		"host":     cfg.Database.Host,
+		"port":     cfg.Database.Port,
 		"database": cfg.Database.Database,
 	})
 
