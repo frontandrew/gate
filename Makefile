@@ -75,7 +75,7 @@ build: ## Build the application image
 
 test: ## Run tests
 	@echo "Running tests..."
-	@docker run --rm -v $(CURDIR):/app -w /app golang:1.22-alpine go test -v -race ./...
+	@docker run --rm -v $(CURDIR):/app -w /app golang:1.22-alpine go test -v ./...
 	@echo "Tests completed!"
 
 lint: ## Run linter

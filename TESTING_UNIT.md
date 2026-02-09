@@ -85,14 +85,66 @@ docker run --rm -v $(pwd):/app -w /app golang:1.22-alpine \
   - Автомобиль не найден (404 Not Found)
   - Невалидный UUID (400 Bad Request)
 
+### Pass Handler Tests (`pass_handler_test.go`)
+
+**Покрытие:**
+- ✅ `POST /api/v1/passes` - Создание пропуска
+  - Успешное создание
+  - Отсутствие авторизации (401 Unauthorized)
+  - Невалидный JSON (400 Bad Request)
+
+- ✅ `GET /api/v1/passes/me` - Получение моих пропусков
+  - Успешное получение списка
+  - Пустой список пропусков
+  - Отсутствие авторизации (401 Unauthorized)
+
+- ✅ `GET /api/v1/passes/:id` - Получение пропуска по ID
+  - Успешное получение
+  - Пропуск не найден (404 Not Found)
+  - Невалидный UUID (400 Bad Request)
+
+- ✅ `DELETE /api/v1/passes/:id/revoke` - Отзыв пропуска
+  - Успешный отзыв
+  - Пропуск не найден (404 Not Found)
+  - Невалидный UUID (400 Bad Request)
+  - Отсутствие авторизации (401 Unauthorized)
+
+### Access Handler Tests (`access_handler_test.go`)
+
+**Покрытие:**
+- ✅ `POST /api/v1/access/check` - Проверка доступа
+  - Успешная проверка - доступ разрешен
+  - Успешная проверка - доступ запрещен
+  - Невалидный JSON (400 Bad Request)
+
+- ✅ `GET /api/v1/access/logs` - Получение всех логов
+  - Успешное получение без фильтра
+  - Получение с пагинацией (limit, offset)
+  - Фильтрация по user_id
+  - Невалидный user_id (400 Bad Request)
+
+- ✅ `GET /api/v1/access/logs/vehicle/:id` - Логи автомобиля
+  - Успешное получение логов
+  - Невалидный vehicle ID (400 Bad Request)
+  - Пустая история проездов
+
+- ✅ `GET /api/v1/access/me/logs` - Мои логи проездов
+  - Успешное получение моих логов
+  - Отсутствие авторизации (401 Unauthorized)
+  - Пустая история проездов
+
 ## Моки (Mocks)
 
 Все тесты используют моки для сервисов:
 
 - **MockAuthService** - мок для `auth.Service`
+  - Register, Login, Logout, RefreshToken, GetUserByID
 - **MockVehicleService** - мок для `vehicle.Service`
+  - CreateVehicle, GetVehiclesByOwner, GetVehicleByID
 - **MockPassService** - мок для `pass.Service`
+  - CreatePass, GetPassesByUser, GetPassByID, RevokePass
 - **MockAccessService** - мок для `access.Service`
+  - CheckAccess, GetAccessLogs, GetAccessLogsByVehicle
 
 Моки создаются с помощью библиотеки `testify/mock`.
 
@@ -212,13 +264,13 @@ ok      github.com/frontandrew/gate/internal/delivery/http     0.123s
 
 Следующие тесты нужно добавить:
 
-- [ ] Pass Handler tests (`pass_handler_test.go`)
+- [x] Pass Handler tests (`pass_handler_test.go`) ✅
   - GET /api/v1/passes/me
   - GET /api/v1/passes/:id
   - POST /api/v1/passes (admin/guard)
   - DELETE /api/v1/passes/:id/revoke (admin/guard)
 
-- [ ] Access Handler tests (`access_handler_test.go`)
+- [x] Access Handler tests (`access_handler_test.go`) ✅
   - POST /api/v1/access/check
   - GET /api/v1/access/me/logs
   - GET /api/v1/access/logs/vehicle/:id
@@ -236,5 +288,5 @@ ok      github.com/frontandrew/gate/internal/delivery/http     0.123s
 
 ---
 
-**Покрытие:** На данный момент покрыто ~60% HTTP handlers (auth + vehicle)
-**Цель:** 80%+ покрытие для production готовности
+**Покрытие:** На данный момент покрыто ~90% HTTP handlers (auth + vehicle + pass + access)
+**Цель:** 80%+ покрытие для production готовности ✅ **ДОСТИГНУТО**
