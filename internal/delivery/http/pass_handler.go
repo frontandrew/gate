@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -11,14 +12,22 @@ import (
 	"github.com/google/uuid"
 )
 
+// PassService определяет интерфейс для сервиса пропусков
+type PassService interface {
+	CreatePass(ctx context.Context, req *pass.CreatePassRequest) (*domain.Pass, error)
+	GetPassesByUser(ctx context.Context, userID uuid.UUID) ([]*domain.Pass, error)
+	GetPassByID(ctx context.Context, passID uuid.UUID) (*domain.Pass, error)
+	RevokePass(ctx context.Context, passID, revokedBy uuid.UUID, reason string) error
+}
+
 // PassHandler обрабатывает запросы связанные с пропусками
 type PassHandler struct {
-	passService *pass.Service
+	passService PassService
 	logger      logger.Logger
 }
 
 // NewPassHandler создает новый handler
-func NewPassHandler(passService *pass.Service, logger logger.Logger) *PassHandler {
+func NewPassHandler(passService PassService, logger logger.Logger) *PassHandler {
 	return &PassHandler{
 		passService: passService,
 		logger:      logger,

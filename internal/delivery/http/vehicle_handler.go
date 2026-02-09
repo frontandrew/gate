@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -11,14 +12,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// VehicleService определяет интерфейс для сервиса автомобилей
+type VehicleService interface {
+	CreateVehicle(ctx context.Context, req *vehicle.CreateVehicleRequest) (*domain.Vehicle, error)
+	GetVehiclesByOwner(ctx context.Context, ownerID uuid.UUID) ([]*domain.Vehicle, error)
+	GetVehicleByID(ctx context.Context, vehicleID uuid.UUID) (*domain.Vehicle, error)
+}
+
 // VehicleHandler обрабатывает запросы связанные с автомобилями
 type VehicleHandler struct {
-	vehicleService *vehicle.Service
+	vehicleService VehicleService
 	logger         logger.Logger
 }
 
 // NewVehicleHandler создает новый handler
-func NewVehicleHandler(vehicleService *vehicle.Service, logger logger.Logger) *VehicleHandler {
+func NewVehicleHandler(vehicleService VehicleService, logger logger.Logger) *VehicleHandler {
 	return &VehicleHandler{
 		vehicleService: vehicleService,
 		logger:         logger,

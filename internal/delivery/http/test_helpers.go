@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/frontandrew/gate/internal/delivery/http/middleware"
 	"github.com/frontandrew/gate/internal/domain"
 	"github.com/frontandrew/gate/internal/pkg/jwt"
 	"github.com/frontandrew/gate/internal/usecase/access"
@@ -218,10 +219,14 @@ func CreateTestAccessLog(id, vehicleID uuid.UUID, licensePlate string, accessGra
 	}
 }
 
-// CreateAuthContext создает контекст с user_id для тестирования
-func CreateAuthContext(t *testing.T, userID uuid.UUID) context.Context {
-	ctx := context.Background()
-	return context.WithValue(ctx, userIDContextKey, userID)
+// CreateAuthContext создает контекст с JWT claims для тестирования
+func CreateAuthContext(t *testing.T, userID uuid.UUID, email string, role domain.UserRole) context.Context {
+	claims := &jwt.Claims{
+		UserID: userID,
+		Email:  email,
+		Role:   role,
+	}
+	return context.WithValue(context.Background(), middleware.UserClaimsKey, claims)
 }
 
 // CreateTestJWTToken создает тестовый JWT токен

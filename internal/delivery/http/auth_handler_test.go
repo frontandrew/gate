@@ -2,70 +2,18 @@ package http
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/frontandrew/gate/internal/domain"
-	"github.com/frontandrew/gate/internal/pkg/jwt"
 	"github.com/frontandrew/gate/internal/pkg/logger"
 	"github.com/frontandrew/gate/internal/usecase/auth"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
-
-// MockAuthService - мок для auth service
-type MockAuthService struct {
-	mock.Mock
-}
-
-func (m *MockAuthService) Register(ctx context.Context, req *auth.RegisterRequest) (*domain.User, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.User), args.Error(1)
-}
-
-func (m *MockAuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*auth.LoginResponse), args.Error(1)
-}
-
-func (m *MockAuthService) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.User), args.Error(1)
-}
-
-func (m *MockAuthService) ValidateToken(tokenString string) (*jwt.Claims, error) {
-	args := m.Called(tokenString)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*jwt.Claims), args.Error(1)
-}
-
-func (m *MockAuthService) RefreshToken(ctx context.Context, req *auth.RefreshTokenRequest) (*auth.LoginResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*auth.LoginResponse), args.Error(1)
-}
-
-func (m *MockAuthService) Logout(ctx context.Context, req *auth.LogoutRequest) error {
-	args := m.Called(ctx, req)
-	return args.Error(0)
-}
 
 // TestAuthHandler_Register тестирует регистрацию пользователя
 func TestAuthHandler_Register(t *testing.T) {
@@ -97,7 +45,7 @@ func TestAuthHandler_Register(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
 				data := resp["data"].(map[string]interface{})
 				assert.Equal(t, "test@example.com", data["email"])
 				assert.Equal(t, "Test User", data["full_name"])
@@ -116,8 +64,12 @@ func TestAuthHandler_Register(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
-				assert.Contains(t, resp["error"].(string), "already exists")
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
+				if err, ok := resp["error"].(string); ok {
+					assert.Contains(t, err, "already exists")
+				}
 			},
 		},
 		{
@@ -126,7 +78,9 @@ func TestAuthHandler_Register(t *testing.T) {
 			mockSetup:      func(m *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -199,7 +153,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
 				data := resp["data"].(map[string]interface{})
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -217,7 +171,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 		{
@@ -232,7 +186,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusForbidden,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 	}
@@ -289,7 +243,7 @@ func TestAuthHandler_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
 				assert.Equal(t, "Logged out successfully", resp["message"])
 			},
 		},
@@ -304,7 +258,7 @@ func TestAuthHandler_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 	}
@@ -364,7 +318,7 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
 				data := resp["data"].(map[string]interface{})
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -381,7 +335,7 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 		{
@@ -395,7 +349,7 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 	}

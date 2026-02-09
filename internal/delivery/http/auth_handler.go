@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -8,16 +9,26 @@ import (
 	"github.com/frontandrew/gate/internal/domain"
 	"github.com/frontandrew/gate/internal/pkg/logger"
 	"github.com/frontandrew/gate/internal/usecase/auth"
+	"github.com/google/uuid"
 )
+
+// AuthService определяет интерфейс для сервиса аутентификации
+type AuthService interface {
+	Register(ctx context.Context, req *auth.RegisterRequest) (*domain.User, error)
+	Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error)
+	Logout(ctx context.Context, req *auth.LogoutRequest) error
+	RefreshToken(ctx context.Context, req *auth.RefreshTokenRequest) (*auth.LoginResponse, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, error)
+}
 
 // AuthHandler обрабатывает запросы аутентификации
 type AuthHandler struct {
-	authService *auth.Service
+	authService AuthService
 	logger      logger.Logger
 }
 
 // NewAuthHandler создает новый handler
-func NewAuthHandler(authService *auth.Service, logger logger.Logger) *AuthHandler {
+func NewAuthHandler(authService AuthService, logger logger.Logger) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
 		logger:      logger,

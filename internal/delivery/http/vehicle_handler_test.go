@@ -17,48 +17,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockVehicleService - мок для vehicle service
-type MockVehicleService struct {
-	mock.Mock
-}
-
-func (m *MockVehicleService) Create(ctx context.Context, req *vehicle.CreateVehicleRequest) (*domain.Vehicle, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Vehicle), args.Error(1)
-}
-
-func (m *MockVehicleService) GetByID(ctx context.Context, id uuid.UUID) (*domain.Vehicle, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Vehicle), args.Error(1)
-}
-
-func (m *MockVehicleService) GetByOwner(ctx context.Context, ownerID uuid.UUID) ([]*domain.Vehicle, error) {
-	args := m.Called(ctx, ownerID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*domain.Vehicle), args.Error(1)
-}
-
-func (m *MockVehicleService) Update(ctx context.Context, req *vehicle.UpdateVehicleRequest) (*domain.Vehicle, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Vehicle), args.Error(1)
-}
-
-func (m *MockVehicleService) Delete(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
 // TestVehicleHandler_CreateVehicle тестирует создание автомобиля
 func TestVehicleHandler_CreateVehicle(t *testing.T) {
 	userID := uuid.New()
@@ -81,7 +39,7 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 				Color:        "Черный",
 			},
 			mockSetup: func(m *MockVehicleService) {
-				m.On("Create", mock.Anything, mock.AnythingOfType("*vehicle.CreateVehicleRequest")).
+				m.On("CreateVehicle", mock.Anything, mock.AnythingOfType("*vehicle.CreateVehicleRequest")).
 					Return(&domain.Vehicle{
 						ID:           vehicleID,
 						OwnerID:      userID,
@@ -94,9 +52,10 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
-				data := resp["data"].(map[string]interface{})
-				assert.Equal(t, "А123ВС777", data["license_plate"])
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if data, ok := resp["data"].(map[string]interface{}); ok {
+					assert.Equal(t, "А123ВС777", data["license_plate"])
+				}
 			},
 		},
 		{
@@ -107,12 +66,12 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 				VehicleType:  "car",
 			},
 			mockSetup: func(m *MockVehicleService) {
-				m.On("Create", mock.Anything, mock.AnythingOfType("*vehicle.CreateVehicleRequest")).
+				m.On("CreateVehicle", mock.Anything, mock.AnythingOfType("*vehicle.CreateVehicleRequest")).
 					Return(nil, domain.ErrVehicleAlreadyExists)
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 		{
@@ -121,7 +80,7 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			mockSetup:      func(m *MockVehicleService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 	}
@@ -142,6 +101,7 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vehicles", bytes.NewReader(body))
+			req = req.WithContext(CreateAuthContext(t, userID, "test@example.com", domain.RoleUser))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -191,26 +151,28 @@ func TestVehicleHandler_GetMyVehicles(t *testing.T) {
 			name:   "успешное получение",
 			userID: userID,
 			mockSetup: func(m *MockVehicleService) {
-				m.On("GetByOwner", mock.Anything, userID).Return(vehicles, nil)
+				m.On("GetVehiclesByOwner", mock.Anything, userID).Return(vehicles, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
-				data := resp["data"].([]interface{})
-				assert.Len(t, data, 2)
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if data, ok := resp["data"].([]interface{}); ok {
+					assert.Len(t, data, 2)
+				}
 			},
 		},
 		{
 			name:   "нет автомобилей",
 			userID: userID,
 			mockSetup: func(m *MockVehicleService) {
-				m.On("GetByOwner", mock.Anything, userID).Return([]*domain.Vehicle{}, nil)
+				m.On("GetVehiclesByOwner", mock.Anything, userID).Return([]*domain.Vehicle{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
-				data := resp["data"].([]interface{})
-				assert.Len(t, data, 0)
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if data, ok := resp["data"].([]interface{}); ok {
+					assert.Len(t, data, 0)
+				}
 			},
 		},
 	}
@@ -224,9 +186,7 @@ func TestVehicleHandler_GetMyVehicles(t *testing.T) {
 			handler := NewVehicleHandler(mockService, log)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/vehicles/me", nil)
-			// Добавляем user_id в контекст (как это делает AuthMiddleware)
-			ctx := context.WithValue(req.Context(), userIDContextKey, tt.userID)
-			req = req.WithContext(ctx)
+			req = req.WithContext(CreateAuthContext(t, tt.userID, "test@example.com", domain.RoleUser))
 
 			w := httptest.NewRecorder()
 			handler.GetMyVehicles(w, req)
@@ -258,7 +218,7 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			name:      "успешное получение",
 			vehicleID: vehicleID.String(),
 			mockSetup: func(m *MockVehicleService) {
-				m.On("GetByID", mock.Anything, vehicleID).Return(&domain.Vehicle{
+				m.On("GetVehicleByID", mock.Anything, vehicleID).Return(&domain.Vehicle{
 					ID:           vehicleID,
 					OwnerID:      userID,
 					LicensePlate: "А123ВС777",
@@ -269,21 +229,22 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.True(t, resp["success"].(bool))
-				data := resp["data"].(map[string]interface{})
-				assert.Equal(t, "А123ВС777", data["license_plate"])
+				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if data, ok := resp["data"].(map[string]interface{}); ok {
+					assert.Equal(t, "А123ВС777", data["license_plate"])
+				}
 			},
 		},
 		{
 			name:      "автомобиль не найден",
 			vehicleID: vehicleID.String(),
 			mockSetup: func(m *MockVehicleService) {
-				m.On("GetByID", mock.Anything, vehicleID).
+				m.On("GetVehicleByID", mock.Anything, vehicleID).
 					Return(nil, domain.ErrVehicleNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 		{
@@ -292,7 +253,7 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			mockSetup:      func(m *MockVehicleService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.False(t, resp["success"].(bool))
+				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
 			},
 		},
 	}

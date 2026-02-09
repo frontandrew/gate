@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // respondJSON отправляет JSON ответ
@@ -27,11 +29,15 @@ func respondError(w http.ResponseWriter, code int, message string) {
 	})
 }
 
-// getPathParam извлекает параметр из пути URL
+// getPathParam извлекает параметр из пути URL используя chi router context
 // Например: /api/v1/users/123 -> getPathParam(r, "id") = "123"
 func getPathParam(r *http.Request, param string) string {
-	// Простая реализация для извлечения последнего сегмента пути
-	// В реальности лучше использовать роутер с поддержкой параметров (chi, gorilla/mux)
+	// Сначала пробуем получить из chi router context
+	if rctx := chi.RouteContext(r.Context()); rctx != nil {
+		return chi.URLParam(r, param)
+	}
+
+	// Fallback: простая реализация для извлечения последнего сегмента пути
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if len(parts) > 0 {
 		return parts[len(parts)-1]

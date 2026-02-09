@@ -127,3 +127,14 @@ func SetGlobalLogger(logger Logger) {
 		log.Logger = zl.logger
 	}
 }
+
+// NewDevelopment creates a logger suitable for development/testing
+func NewDevelopment() Logger {
+	return New("debug", "console", "stdout")
+}
+
+// NewNoop creates a noop logger that discards all log messages
+func NewNoop() Logger {
+	logger := zerolog.New(io.Discard)
+	return &zerologLogger{logger: logger}
+}
