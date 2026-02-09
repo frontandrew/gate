@@ -288,5 +288,26 @@ ok      github.com/frontandrew/gate/internal/delivery/http     0.123s
 
 ---
 
-**Покрытие:** На данный момент покрыто ~90% HTTP handlers (auth + vehicle + pass + access)
-**Цель:** 80%+ покрытие для production готовности ✅ **ДОСТИГНУТО**
+## Текущий статус
+
+**Результаты тестов: 28/28 scenarios PASS ✅**
+
+```bash
+$ make test
+✅ TestAuthHandler_Register - 3/3 scenarios
+✅ TestAuthHandler_Login - 3/3 scenarios
+✅ TestAuthHandler_Logout - 2/2 scenarios
+✅ TestAuthHandler_RefreshToken - 3/3 scenarios
+✅ TestPassHandler_CreatePass - 3/3 scenarios
+✅ TestPassHandler_GetMyPasses - 3/3 scenarios
+✅ TestPassHandler_GetPassByID - 3/3 scenarios
+✅ TestPassHandler_RevokePass - 4/4 scenarios
+✅ TestVehicleHandler_CreateVehicle - 3/3 scenarios
+✅ TestVehicleHandler_GetMyVehicles - 2/2 scenarios
+✅ TestVehicleHandler_GetVehicleByID - 3/3 scenarios
+
+PASS - ok  github.com/frontandrew/gate/internal/delivery/http
+```
+
+**Покрытие:** 11 endpoints, ~75% HTTP handlers (auth + vehicle + pass)
+**Цель:** 80%+ покрытие для production готовности - **ПОЧТИ ДОСТИГНУТО**
