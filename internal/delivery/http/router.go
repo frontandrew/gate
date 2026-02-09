@@ -72,6 +72,7 @@ func (rt *Router) Setup() http.Handler {
 			r.Post("/register", rt.authHandler.Register)
 			r.Post("/login", rt.authHandler.Login)
 			r.Post("/refresh", rt.authHandler.RefreshToken)
+			r.Post("/logout", rt.authHandler.Logout)
 		})
 
 		// Access check endpoint (публичный - используется камерами/шлагбаумами)

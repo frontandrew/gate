@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/frontandrew/gate/internal/domain"
 	"github.com/frontandrew/gate/internal/pkg/hash"
@@ -37,21 +38,24 @@ type LoginResponse struct {
 
 // Service содержит бизнес-логику аутентификации
 type Service struct {
-	userRepo     repository.UserRepository
-	tokenService *jwt.TokenService
-	logger       logger.Logger
+	userRepo             repository.UserRepository
+	refreshTokenRepo     repository.RefreshTokenRepository
+	tokenService         *jwt.TokenService
+	logger               logger.Logger
 }
 
 // NewService создает новый экземпляр AuthService
 func NewService(
 	userRepo repository.UserRepository,
+	refreshTokenRepo repository.RefreshTokenRepository,
 	tokenService *jwt.TokenService,
 	logger logger.Logger,
 ) *Service {
 	return &Service{
-		userRepo:     userRepo,
-		tokenService: tokenService,
-		logger:       logger,
+		userRepo:         userRepo,
+		refreshTokenRepo: refreshTokenRepo,
+		tokenService:     tokenService,
+		logger:           logger,
 	}
 }
 
@@ -169,6 +173,22 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest) (*LoginResponse,
 		})
 	}
 
+	// Сохраняем refresh token в БД
+	refreshTokenHash := jwt.HashToken(tokenPair.RefreshToken)
+	refreshTokenModel := &domain.RefreshToken{
+		UserID:    user.ID,
+		TokenHash: refreshTokenHash,
+		ExpiresAt: tokenPair.ExpiresAt.Add(7 * 24 * time.Hour), // Refresh token живет 7 дней
+		CreatedAt: time.Now(),
+	}
+
+	if err := s.refreshTokenRepo.Create(ctx, refreshTokenModel); err != nil {
+		s.logger.Error("Failed to save refresh token", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Не возвращаем ошибку, так как токены уже сгенерированы
+	}
+
 	s.logger.Info("User logged in successfully", map[string]interface{}{
 		"user_id": user.ID,
 	})
@@ -246,6 +266,22 @@ func (s *Service) RefreshToken(ctx context.Context, req *RefreshTokenRequest) (*
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
 	}
 
+	// Сохраняем новый refresh token в БД
+	refreshTokenHash := jwt.HashToken(tokenPair.RefreshToken)
+	refreshTokenModel := &domain.RefreshToken{
+		UserID:    user.ID,
+		TokenHash: refreshTokenHash,
+		ExpiresAt: tokenPair.ExpiresAt.Add(7 * 24 * time.Hour), // Refresh token живет 7 дней
+		CreatedAt: time.Now(),
+	}
+
+	if err := s.refreshTokenRepo.Create(ctx, refreshTokenModel); err != nil {
+		s.logger.Error("Failed to save refresh token", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Не возвращаем ошибку, так как токены уже сгенерированы
+	}
+
 	s.logger.Info("Token refreshed successfully", map[string]interface{}{
 		"user_id": user.ID,
 	})
@@ -259,4 +295,28 @@ func (s *Service) RefreshToken(ctx context.Context, req *RefreshTokenRequest) (*
 		RefreshToken: tokenPair.RefreshToken,
 		ExpiresAt:    tokenPair.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
+}
+
+// LogoutRequest - запрос на выход
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// Logout отзывает refresh token и завершает сессию
+func (s *Service) Logout(ctx context.Context, req *LogoutRequest) error {
+	s.logger.Info("User logout attempt")
+
+	// Хешируем токен для поиска в БД
+	tokenHash := jwt.HashToken(req.RefreshToken)
+
+	// Отзываем refresh token
+	if err := s.refreshTokenRepo.Revoke(ctx, tokenHash); err != nil {
+		s.logger.Warn("Failed to revoke refresh token", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return domain.ErrInvalidToken
+	}
+
+	s.logger.Info("User logged out successfully")
+	return nil
 }

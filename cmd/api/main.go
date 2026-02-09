@@ -73,6 +73,7 @@ func main() {
 	accessLogRepo := postgres.NewAccessLogRepository(db)
 	whitelistRepo := postgres.NewWhitelistRepository(db)
 	blacklistRepo := postgres.NewBlacklistRepository(db)
+	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
 
 	log.Info("Repositories initialized")
 
@@ -111,7 +112,7 @@ func main() {
 	// Создание use case services
 	// =========================================================================
 
-	authService := auth.NewService(userRepo, tokenService, log)
+	authService := auth.NewService(userRepo, refreshTokenRepo, tokenService, log)
 	vehicleService := vehicle.NewService(vehicleRepo, userRepo, log)
 	passService := pass.NewService(passRepo, passVehicleRepo, userRepo, vehicleRepo, log)
 	accessService := access.NewService(vehicleRepo, userRepo, passRepo, accessLogRepo, whitelistRepo, blacklistRepo, mlClient, log, cfg.ML.MinConfidence)

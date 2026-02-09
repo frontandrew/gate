@@ -40,6 +40,7 @@ API будет доступен на `http://localhost:8080`
 - **Register New User** - регистрация нового пользователя
 - **Login** - вход (автоматически сохраняет токен)
 - **Refresh Token** - обновление access token без повторного логина
+- **Logout** - выход и отзыв refresh token
 - **Get Current User (Me)** - информация о текущем пользователе
 
 ### 📁 Vehicles
@@ -225,6 +226,14 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 ```bash
 REFRESH_TOKEN="your_refresh_token_here"
 curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}"
+```
+
+### Logout
+```bash
+REFRESH_TOKEN="your_refresh_token_here"
+curl -X POST http://localhost:8080/api/v1/auth/logout \
   -H "Content-Type: application/json" \
   -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}"
 ```

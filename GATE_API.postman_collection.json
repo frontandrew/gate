@@ -142,6 +142,44 @@
 					}
 				},
 				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.environment.set('access_token', '');",
+									"    pm.environment.set('refresh_token', '');",
+									"    pm.environment.set('current_user_id', '');",
+									"    console.log('Logged out, tokens cleared');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "logout"]
+						},
+						"description": "Logout and revoke refresh token. Clears all tokens from environment."
+					}
+				},
+				{
 					"name": "Get Current User (Me)",
 					"request": {
 						"auth": {

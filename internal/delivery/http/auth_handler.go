@@ -148,3 +148,31 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		"data":    response,
 	})
 }
+
+// Logout завершает сессию пользователя
+// POST /api/v1/auth/logout
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req auth.LogoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	err := h.authService.Logout(r.Context(), &req)
+	if err != nil {
+		if err == domain.ErrInvalidToken {
+			respondError(w, http.StatusUnauthorized, "Invalid refresh token")
+			return
+		}
+		h.logger.Error("Failed to logout", map[string]interface{}{
+			"error": err.Error(),
+		})
+		respondError(w, http.StatusInternalServerError, "Failed to logout")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Logged out successfully",
+	})
+}

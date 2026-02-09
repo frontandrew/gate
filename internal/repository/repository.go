@@ -186,3 +186,21 @@ type WhitelistRepository interface {
 	// GetExpired возвращает истекшие записи для удаления
 	GetExpired(ctx context.Context) ([]*domain.WhitelistEntry, error)
 }
+
+// RefreshTokenRepository определяет методы для работы с refresh токенами
+type RefreshTokenRepository interface {
+	// Create сохраняет новый refresh token
+	Create(ctx context.Context, token *domain.RefreshToken) error
+
+	// GetByTokenHash возвращает refresh token по хешу
+	GetByTokenHash(ctx context.Context, tokenHash string) (*domain.RefreshToken, error)
+
+	// Revoke отзывает refresh token
+	Revoke(ctx context.Context, tokenHash string) error
+
+	// RevokeAllUserTokens отзывает все токены пользователя
+	RevokeAllUserTokens(ctx context.Context, userID uuid.UUID) error
+
+	// DeleteExpired удаляет истекшие токены
+	DeleteExpired(ctx context.Context) error
+}
