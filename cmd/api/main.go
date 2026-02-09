@@ -15,6 +15,7 @@ import (
 	"github.com/frontandrew/gate/internal/pkg/database"
 	"github.com/frontandrew/gate/internal/pkg/jwt"
 	"github.com/frontandrew/gate/internal/pkg/logger"
+	"github.com/frontandrew/gate/internal/pkg/redis"
 	"github.com/frontandrew/gate/internal/repository/postgres"
 	"github.com/frontandrew/gate/internal/usecase/access"
 	"github.com/frontandrew/gate/internal/usecase/auth"
@@ -60,6 +61,29 @@ func main() {
 		"host":     cfg.Database.Host,
 		"port":     cfg.Database.Port,
 		"database": cfg.Database.Database,
+	})
+
+	// =========================================================================
+	// Подключение к Redis
+	// =========================================================================
+
+	redisClient, err := redis.NewClient(redis.Config{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		log.Fatal("Failed to connect to Redis", map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+	defer redisClient.Close()
+
+	log.Info("Connected to Redis", map[string]interface{}{
+		"host": cfg.Redis.Host,
+		"port": cfg.Redis.Port,
+		"db":   cfg.Redis.DB,
 	})
 
 	// =========================================================================
