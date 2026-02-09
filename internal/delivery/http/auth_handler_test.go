@@ -45,7 +45,9 @@ func TestAuthHandler_Register(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				data := resp["data"].(map[string]interface{})
 				assert.Equal(t, "test@example.com", data["email"])
 				assert.Equal(t, "Test User", data["full_name"])
@@ -153,7 +155,9 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				data := resp["data"].(map[string]interface{})
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -171,7 +175,9 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -186,7 +192,9 @@ func TestAuthHandler_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusForbidden,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -243,7 +251,9 @@ func TestAuthHandler_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				assert.Equal(t, "Logged out successfully", resp["message"])
 			},
 		},
@@ -258,7 +268,9 @@ func TestAuthHandler_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -318,7 +330,9 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				data := resp["data"].(map[string]interface{})
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -335,7 +349,9 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -349,7 +365,9 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}

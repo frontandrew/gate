@@ -52,7 +52,9 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				if data, ok := resp["data"].(map[string]interface{}); ok {
 					assert.Equal(t, "А123ВС777", data["license_plate"])
 				}
@@ -71,7 +73,9 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -80,7 +84,9 @@ func TestVehicleHandler_CreateVehicle(t *testing.T) {
 			mockSetup:      func(m *MockVehicleService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -155,7 +161,9 @@ func TestVehicleHandler_GetMyVehicles(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				if data, ok := resp["data"].([]interface{}); ok {
 					assert.Len(t, data, 2)
 				}
@@ -169,7 +177,9 @@ func TestVehicleHandler_GetMyVehicles(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				if data, ok := resp["data"].([]interface{}); ok {
 					assert.Len(t, data, 0)
 				}
@@ -229,7 +239,9 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				if data, ok := resp["data"].(map[string]interface{}); ok {
 					assert.Equal(t, "А123ВС777", data["license_plate"])
 				}
@@ -244,7 +256,9 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -253,7 +267,9 @@ func TestVehicleHandler_GetVehicleByID(t *testing.T) {
 			mockSetup:      func(m *MockVehicleService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}

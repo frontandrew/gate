@@ -14,10 +14,10 @@ func RecoveryMiddleware(log logger.Logger) func(http.Handler) http.Handler {
 			defer func() {
 				if err := recover(); err != nil {
 					log.Error("Panic recovered", map[string]interface{}{
-						"error":      err,
-						"stack":      string(debug.Stack()),
-						"method":     r.Method,
-						"path":       r.URL.Path,
+						"error":       err,
+						"stack":       string(debug.Stack()),
+						"method":      r.Method,
+						"path":        r.URL.Path,
 						"remote_addr": r.RemoteAddr,
 					})
 

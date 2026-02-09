@@ -42,7 +42,9 @@ func TestPassHandler_CreatePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				assert.NotNil(t, resp["data"])
 			},
 		},
@@ -61,7 +63,9 @@ func TestPassHandler_CreatePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -75,7 +79,9 @@ func TestPassHandler_CreatePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -129,7 +135,9 @@ func TestPassHandler_GetMyPasses(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				data := resp["data"].([]interface{})
 				assert.Len(t, data, 2)
 			},
@@ -145,7 +153,9 @@ func TestPassHandler_GetMyPasses(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				data := resp["data"].([]interface{})
 				assert.Empty(t, data)
 			},
@@ -160,7 +170,9 @@ func TestPassHandler_GetMyPasses(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -209,7 +221,9 @@ func TestPassHandler_GetPassByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				assert.NotNil(t, resp["data"])
 			},
 		},
@@ -221,7 +235,9 @@ func TestPassHandler_GetPassByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -232,7 +248,9 @@ func TestPassHandler_GetPassByID(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
@@ -294,7 +312,9 @@ func TestPassHandler_RevokePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.True(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.True(t, success)
+				}
 				assert.Equal(t, "Pass revoked successfully", resp["message"])
 			},
 		},
@@ -313,7 +333,9 @@ func TestPassHandler_RevokePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -330,7 +352,9 @@ func TestPassHandler_RevokePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 		{
@@ -347,7 +371,9 @@ func TestPassHandler_RevokePass(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				if success, ok := resp["success"].(bool); ok { assert.False(t, success) }
+				if success, ok := resp["success"].(bool); ok {
+					assert.False(t, success)
+				}
 			},
 		},
 	}
